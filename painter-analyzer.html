@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Målerioffert</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f4f0;
+    color: #1a1a18;
+    min-height: 100vh;
+    padding: 1.5rem 1rem 3rem;
+  }
+  .container { max-width: 640px; margin: 0 auto; }
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    border: 0.5px solid rgba(0,0,0,0.1);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .card-label {
+    font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: #888780; margin-bottom: 0.75rem;
+  }
+
+  /* Login */
+  #loginScreen { display: block; }
+  #appScreen   { display: none; }
+  .login-header { text-align: center; margin-bottom: 2rem; padding-top: 1rem; }
+  .login-logo {
+    width: 60px; height: 60px; border-radius: 18px;
+    background: #534ab7; display: flex; align-items: center;
+    justify-content: center; margin: 0 auto 1rem; font-size: 28px;
+  }
+  .login-header h1 { font-size: 22px; font-weight: 600; }
+  .login-header p  { font-size: 14px; color: #6b6b67; margin-top: 4px; }
+
+  .field { margin-bottom: 1rem; }
+  .field label { display: block; font-size: 13px; font-weight: 500; color: #444441; margin-bottom: 6px; }
+  .field input {
+    width: 100%; padding: 0.75rem 0.875rem;
+    border: 1px solid rgba(0,0,0,0.15); border-radius: 10px;
+    font-size: 15px; font-family: inherit; color: #1a1a18;
+    background: #fafaf8; outline: none; transition: border-color 0.15s;
+  }
+  .field input:focus { border-color: #7f77dd; background: #fff; }
+  .field input::placeholder { color: #bbb; }
+  .field input.has-error { border-color: #e24b4a; }
+  .field-error { font-size: 12px; color: #a32d2d; margin-top: 5px; display: none; }
+  .field-error.show { display: block; }
+
+  .btn-primary {
+    width: 100%; padding: 1rem; background: #534ab7;
+    color: #fff; border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 600; cursor: pointer;
+    transition: background 0.15s, transform 0.1s; letter-spacing: 0.01em;
+  }
+  .btn-primary:hover  { background: #3c3489; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { background: #b4b2a9; cursor: not-allowed; }
+
+  /* App header */
+  .app-header {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 1.5rem;
+  }
+  .app-header h1 { font-size: 20px; font-weight: 600; }
+  .app-header p  { font-size: 13px; color: #6b6b67; margin-top: 2px; }
+
+  .avatar-wrap { position: relative; }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: #eeedfe; color: #3c3489;
+    font-size: 14px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; border: 0.5px solid rgba(83,74,183,0.25);
+    user-select: none;
+  }
+  .profile-menu {
+    position: absolute; top: 48px; right: 0;
+    background: #fff; border: 0.5px solid rgba(0,0,0,0.12);
+    border-radius: 14px; padding: 0.875rem; min-width: 230px;
+    z-index: 100; display: none;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  }
+  .profile-menu.open { display: block; }
+  .pm-name    { font-size: 14px; font-weight: 600; color: #1a1a18; }
+  .pm-company { font-size: 12px; color: #6b6b67; margin-top: 2px; }
+  .pm-divider { border: none; border-top: 0.5px solid rgba(0,0,0,0.08); margin: 0.625rem 0; }
+  .pm-row     { font-size: 12px; color: #6b6b67; padding: 2px 0; }
+  .pm-logout  {
+    display: block; width: 100%; padding: 0.5rem 0.5rem;
+    background: none; border: none; border-radius: 8px;
+    font-size: 13px; color: #a32d2d; font-weight: 500;
+    cursor: pointer; text-align: left; margin-top: 0.5rem;
+  }
+  .pm-logout:hover { background: #fcebeb; }
+
+  /* Textarea */
+  textarea {
+    width: 100%; min-height: 160px;
+    border: 1px solid rgba(0,0,0,0.15); border-radius: 10px;
+    padding: 0.875rem; font-size: 15px; font-family: inherit;
+    color: #1a1a18; background: #fafaf8; resize: vertical;
+    line-height: 1.6; outline: none; transition: border-color 0.15s;
+  }
+  textarea:focus { border-color: #7f77dd; background: #fff; }
+  textarea::placeholder { color: #aaa; }
+
+  .spinner {
+    display: inline-block; width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+    vertical-align: middle; margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #results { display: none; }
+  .detected-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 0.5px solid rgba(0,0,0,0.07); font-size: 14px;
+  }
+  .detected-row:last-child { border-bottom: none; }
+  .detected-row .key { color: #6b6b67; }
+  .detected-row .val { font-weight: 500; color: #1a1a18; }
+
+  .metrics-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 10px; margin-bottom: 1rem;
+  }
+  .metric-card { background: #f5f4f0; border-radius: 12px; padding: 1rem; }
+  .metric-card .m-label { font-size: 12px; color: #888780; margin-bottom: 4px; }
+  .metric-card .m-value { font-size: 22px; font-weight: 600; color: #1a1a18; }
+  .m-value.profit  { color: #3b6d11; }
+  .m-value.cost    { color: #a32d2d; }
+  .m-value.revenue { color: #185fa5; }
+  .m-value.days    { color: #534ab7; }
+
+  .profit-bar-wrap {
+    background: #f5f4f0; border-radius: 8px;
+    height: 10px; overflow: hidden; margin: 0.5rem 0 1rem;
+  }
+  .profit-bar-inner {
+    height: 100%; background: #1d9e75; border-radius: 8px;
+    transition: width 0.6s ease;
+  }
+  .profit-label { font-size: 13px; color: #6b6b67; margin-bottom: 0.25rem; }
+
+  .offer-text {
+    background: #fafaf8; border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 10px; padding: 1rem; font-size: 14px;
+    line-height: 1.8; color: #2c2c2a; white-space: pre-wrap;
+    font-family: Georgia, 'Times New Roman', serif;
+  }
+  .copy-btn {
+    width: 100%; padding: 0.75rem; background: transparent;
+    color: #534ab7; border: 1px solid #534ab7; border-radius: 10px;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    margin-top: 0.75rem; transition: background 0.15s;
+  }
+  .copy-btn:hover { background: #eeedfe; }
+
+  .tag { display: inline-block; font-size: 12px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+  .tag-teal  { background: #e1f5ee; color: #0f6e56; }
+  .tag-amber { background: #faeeda; color: #854f0b; }
+
+  .error-box {
+    background: #fcebeb; border: 0.5px solid #f09595;
+    border-radius: 10px; padding: 1rem; color: #791f1f;
+    font-size: 14px; margin-bottom: 1rem;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen">
+    <div class="login-header">
+      <div class="login-logo">🖌️</div>
+      <h1>Målerioffert</h1>
+      <p>Fyll i dina uppgifter — sparas lokalt på enheten</p>
+    </div>
+    <div class="card">
+      <div class="card-label">Dina uppgifter</div>
+      <div class="field">
+        <label>Företagsnamn *</label>
+        <input type="text" id="l_company" placeholder="Anderssons Måleri AB" autocomplete="organization">
+        <div class="field-error" id="err_company">Ange företagsnamn</div>
+      </div>
+      <div class="field">
+        <label>Ditt namn *</label>
+        <input type="text" id="l_name" placeholder="Anna Andersson" autocomplete="name">
+        <div class="field-error" id="err_name">Ange ditt namn</div>
+      </div>
+      <div class="field">
+        <label>Telefonnummer *</label>
+        <input type="tel" id="l_phone" placeholder="070-123 45 67" autocomplete="tel">
+        <div class="field-error" id="err_phone">Ange telefonnummer</div>
+      </div>
+      <div class="field">
+        <label>E-postadress *</label>
+        <input type="email" id="l_email" placeholder="anna@anderssonsmaleri.se" autocomplete="email">
+        <div class="field-error" id="err_email">Ange en giltig e-postadress</div>
+      </div>
+      <button class="btn-primary" onclick="doLogin()">Kom igång</button>
+    </div>
+  </div>
+
+  <!-- APP SCREEN -->
+  <div id="appScreen">
+    <div class="app-header">
+      <div>
+        <h1>Målerioffert</h1>
+        <p id="headerCompany"></p>
+      </div>
+      <div class="avatar-wrap">
+        <div class="avatar" id="avatarBtn" onclick="toggleMenu()"></div>
+        <div class="profile-menu" id="profileMenu">
+          <div class="pm-name"    id="pm_name"></div>
+          <div class="pm-company" id="pm_company"></div>
+          <hr class="pm-divider">
+          <div class="pm-row" id="pm_phone"></div>
+          <div class="pm-row" id="pm_email"></div>
+          <button class="pm-logout" onclick="doLogout()">Logga ut / Byt uppgifter</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Jobbförfrågan</div>
+      <textarea id="jobInput" placeholder="T.ex: Hej! Jag behöver måla om vardagsrum och sovrum. Vardagsrummet är 25 kvm och sovrummet är 15 kvm. Det är lite sprickor i väggarna. Vi har 3 dörrar och 4 fönster..."></textarea>
+      <button class="btn-primary" id="analyzeBtn" onclick="analyze()" style="margin-top:0.75rem;">Analysera</button>
+    </div>
+
+    <div id="errorBox"></div>
+
+    <div id="results">
+      <div class="card">
+        <div class="card-label">Tolkad information</div>
+        <div id="detectedRows"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">Ekonomisk sammanfattning</div>
+        <div class="metrics-grid" id="metricsGrid"></div>
+        <div class="profit-label" id="marginLabel"></div>
+        <div class="profit-bar-wrap"><div class="profit-bar-inner" id="profitBar"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-label">Prisdetaljer</div>
+        <div id="priceBreakdown"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">Offerttext</div>
+        <div class="offer-text" id="offerText"></div>
+        <button class="copy-btn" onclick="copyOffer()">Kopiera offerttext</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+const STORAGE_KEY = 'malerioffert_v1';
+let user = null;
+
+(function boot() {
+  try { const s = localStorage.getItem(STORAGE_KEY); if (s) user = JSON.parse(s); } catch(e) {}
+  user ? showApp() : showLogin();
+  document.addEventListener('click', e => {
+    const menu = document.getElementById('profileMenu');
+    if (!document.getElementById('avatarBtn').contains(e.target) && !menu.contains(e.target))
+      menu.classList.remove('open');
+  });
+})();
+
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'block';
+  document.getElementById('appScreen').style.display   = 'none';
+}
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display   = 'block';
+  const initials = user.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  document.getElementById('avatarBtn').textContent     = initials;
+  document.getElementById('headerCompany').textContent = user.company;
+  document.getElementById('pm_name').textContent       = user.name;
+  document.getElementById('pm_company').textContent    = user.company;
+  document.getElementById('pm_phone').textContent      = user.phone;
+  document.getElementById('pm_email').textContent      = user.email;
+}
+
+function doLogin() {
+  const vals = {
+    company: document.getElementById('l_company').value.trim(),
+    name:    document.getElementById('l_name').value.trim(),
+    phone:   document.getElementById('l_phone').value.trim(),
+    email:   document.getElementById('l_email').value.trim(),
+  };
+  const checks = {
+    err_company: !vals.company,
+    err_name:    !vals.name,
+    err_phone:   !vals.phone,
+    err_email:   !vals.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(vals.email),
+  };
+  let ok = true;
+  for (const [errId, fail] of Object.entries(checks)) {
+    const el = document.getElementById(errId);
+    if (fail) { el.classList.add('show'); ok = false; }
+    else        el.classList.remove('show');
+  }
+  if (!ok) return;
+  user = vals;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+  showApp();
+}
+
+function doLogout() {
+  localStorage.removeItem(STORAGE_KEY);
+  user = null;
+  document.getElementById('profileMenu').classList.remove('open');
+  document.getElementById('jobInput').value = '';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('errorBox').innerHTML = '';
+  showLogin();
+}
+
+function toggleMenu() { document.getElementById('profileMenu').classList.toggle('open'); }
+
+const RATES = {
+  wall:120, ceiling:140,
+  spackling:{light:40,normal:70,heavy:110},
+  door:400, window:300, material:35, speed:50, dailyCost:4500, other:2000
+};
+
+function detectInput(text) {
+  const t = text.toLowerCase();
+  let totalFloorArea = 0;
+  const re = /(\d+[\.,]?\d*)\s*(?:kvm|m²|kvadrat)/g; let m;
+  while ((m = re.exec(t)) !== null) totalFloorArea += parseFloat(m[1].replace(',','.'));
+
+  let ceilingArea = 0;
+  const cm = t.match(/tak.*?(\d+[\.,]?\d*)\s*(?:kvm|m²)/);
+  if (cm) ceilingArea = parseFloat(cm[1].replace(',','.'));
+  else if (/\btak\b|ceiling/.test(t)) ceilingArea = totalFloorArea;
+
+  let coats = 2;
+  const qm = t.match(/(\d)\s*(?:lager|strykningar|gånger|omgångar)/);
+  if (qm) coats = parseInt(qm[1]);
+  if (/en gång|ett lager/.test(t)) coats = 1;
+  if (/tre lager|3 lager|3 strykningar/.test(t)) coats = 3;
+
+  let spackling = null;
+  if (/kraftig|stor|djup|allvar|svår|rejäl|mycket sprickor?|hela väggen|stor skada/i.test(t)) spackling='heavy';
+  else if (/sprickor?|hål|ojämn|trasig|skada|lagning|reparation|laga|spackel/i.test(t)) spackling='normal';
+  else if (/lite sprickor?|liten spricka|lätt|minimal|ytlig/i.test(t)) spackling='light';
+
+  let doors=0, windows=0;
+  const dm=t.match(/(\d+)\s*(?:dörrar?|dörrblad)/), wm=t.match(/(\d+)\s*fönster/);
+  if (dm) doors=parseInt(dm[1]); if (wm) windows=parseInt(wm[1]);
+  return { totalFloorArea, wallArea:totalFloorArea*2.5, ceilingArea, coats, spackling, doors, windows };
+}
+
+function calculate(d) {
+  const {wallArea,ceilingArea,coats,spackling,doors,windows}=d;
+  const wallPrice   = wallArea*RATES.wall*coats;
+  const ceilPrice   = ceilingArea*RATES.ceiling;
+  const spackPrice  = spackling ? wallArea*RATES.spackling[spackling] : 0;
+  const doorPrice   = doors*RATES.door, windowPrice=windows*RATES.window;
+  const totalPrice  = wallPrice+ceilPrice+spackPrice+doorPrice+windowPrice;
+  const area        = wallArea+ceilingArea;
+  const materialCost= area*RATES.material*coats;
+  const days        = Math.ceil(area/RATES.speed);
+  const laborCost   = days*RATES.dailyCost;
+  const totalCost   = materialCost+laborCost+RATES.other;
+  const profit      = totalPrice-totalCost;
+  const profitPerDay= days>0?Math.round(profit/days):0;
+  const margin      = totalPrice>0?profit/totalPrice*100:0;
+  return {wallPrice,ceilPrice,spackPrice,doorPrice,windowPrice,totalPrice,materialCost,laborCost,totalCost,profit,profitPerDay,margin,days};
+}
+
+const fmt = n => Math.round(n).toLocaleString('sv-SE')+' kr';
+const spackLabel = s => ({light:'Lätt',normal:'Normal',heavy:'Kraftig'}[s]||'–');
+
+function generateOffer(d,c) {
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('sv-SE',{year:'numeric',month:'long',day:'numeric'});
+  const validStr= new Date(today.getTime()+30*864e5).toLocaleDateString('sv-SE',{year:'numeric',month:'long',day:'numeric'});
+  const rows=[];
+  if(d.wallArea>0)    rows.push(`Väggmålning (${Math.round(d.wallArea)} m², ${d.coats} lager): ${fmt(c.wallPrice)}`);
+  if(d.ceilingArea>0) rows.push(`Takmålning (${Math.round(d.ceilingArea)} m²): ${fmt(c.ceilPrice)}`);
+  if(d.spackling)     rows.push(`Spackling – ${spackLabel(d.spackling)} (${Math.round(d.wallArea)} m²): ${fmt(c.spackPrice)}`);
+  if(d.doors>0)       rows.push(`Dörrar (${d.doors} st): ${fmt(c.doorPrice)}`);
+  if(d.windows>0)     rows.push(`Fönster (${d.windows} st): ${fmt(c.windowPrice)}`);
+  return `OFFERT
+Datum: ${dateStr}
+Giltig till: ${validStr}
+
+Tack för er förfrågan! Vi har nöjet att lämna följande offert:
+
+ARBETSOMFATTNING
+${rows.join('\n')}
+
+──────────────────────────
+TOTALT PRIS (ink. moms): ${fmt(c.totalPrice*1.25)}
+TOTALT PRIS (ex. moms):  ${fmt(c.totalPrice)}
+──────────────────────────
+
+Beräknad arbetstid: ${c.days} arbetsdag${c.days!==1?'ar':''}
+
+VILLKOR
+• Materialet ingår i priset
+• Betalning 30 dagar netto
+• Offerten gäller i 30 dagar från offertdatum
+• ROT-avdrag kan tillämpas (kontakta oss för mer info)
+
+Vi ser fram emot att höra från er!
+
+Med vänliga hälsningar,
+${user.name}
+${user.company}
+${user.phone} | ${user.email}`;
+}
+
+function analyze() {
+  const text=document.getElementById('jobInput').value.trim();
+  const errBox=document.getElementById('errorBox');
+  errBox.innerHTML='';
+  if(!text){errBox.innerHTML='<div class="error-box">Klistra in en jobbförfrågan innan du analyserar.</div>';return;}
+  const btn=document.getElementById('analyzeBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Analyserar...';
+  setTimeout(()=>{
+    try {
+      const d=detectInput(text), c=calculate(d);
+      if(!d.totalFloorArea){
+        errBox.innerHTML='<div class="error-box">Kunde inte hitta någon golvyta. Ange t.ex. "vardagsrum 25 kvm".</div>';
+        document.getElementById('results').style.display='none';
+        btn.disabled=false; btn.textContent='Analysera'; return;
+      }
+      const dRows=[
+        ['Golvyta (totalt)',Math.round(d.totalFloorArea)+' m²'],
+        ['Väggyta (×2,5)',  Math.round(d.wallArea)+' m²'],
+        ['Takyta',          d.ceilingArea>0?Math.round(d.ceilingArea)+' m²':'–'],
+        ['Antal lager',     d.coats],
+        ['Spackling',       d.spackling?`<span class="tag tag-amber">${spackLabel(d.spackling)}</span>`:'<span class="tag tag-teal">Ej behövs</span>'],
+        ['Dörrar',          d.doors>0?d.doors+' st':'–'],
+        ['Fönster',         d.windows>0?d.windows+' st':'–'],
+      ];
+      document.getElementById('detectedRows').innerHTML=dRows.map(([k,v])=>`<div class="detected-row"><span class="key">${k}</span><span class="val">${v}</span></div>`).join('');
+
+      const metrics=[
+        {label:'Totalt pris',  value:fmt(c.totalPrice),   cls:'revenue'},
+        {label:'Total kostnad',value:fmt(c.totalCost),    cls:'cost'},
+        {label:'Vinst',        value:fmt(c.profit),       cls:c.profit>=0?'profit':'cost'},
+        {label:'Vinst/dag',    value:fmt(c.profitPerDay), cls:c.profitPerDay>=0?'profit':'cost'},
+        {label:'Arbetsdagar',  value:c.days+' dag'+(c.days!==1?'ar':''), cls:'days'},
+        {label:'Marginal',     value:Math.round(c.margin)+'%', cls:c.margin>=30?'profit':c.margin>=15?'days':'cost'},
+      ];
+      document.getElementById('metricsGrid').innerHTML=metrics.map(m=>`<div class="metric-card"><div class="m-label">${m.label}</div><div class="m-value ${m.cls}">${m.value}</div></div>`).join('');
+      document.getElementById('profitBar').style.width=Math.max(0,Math.min(100,Math.round(c.margin)))+'%';
+      document.getElementById('marginLabel').textContent=`Täckningsgrad: ${Math.round(c.margin)}%`;
+
+      const breakdown=[
+        ['Väggmålning',c.wallPrice],['Takmålning',c.ceilPrice],
+        ['Spackling',c.spackPrice],['Dörrar',c.doorPrice],['Fönster',c.windowPrice],
+        ['Material (kostnad)',-c.materialCost],['Arbetskostnad',-c.laborCost],['Övrigt (kostnad)',-RATES.other],
+      ];
+      document.getElementById('priceBreakdown').innerHTML=breakdown.filter(([,v])=>v!==0)
+        .map(([k,v])=>`<div class="detected-row"><span class="key">${k}</span><span class="val" style="color:${v>0?'#3b6d11':'#a32d2d'}">${v>0?'+':''}${fmt(v)}</span></div>`).join('');
+
+      document.getElementById('offerText').textContent=generateOffer(d,c);
+      document.getElementById('results').style.display='block';
+      document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+    } catch(e) {
+      errBox.innerHTML='<div class="error-box">Något gick fel. Kontrollera texten och försök igen.</div>';
+    }
+    btn.disabled=false; btn.textContent='Analysera';
+  },400);
+}
+
+function copyOffer(){
+  navigator.clipboard.writeText(document.getElementById('offerText').textContent).then(()=>{
+    const b=document.querySelector('.copy-btn');
+    b.textContent='Kopierad!'; setTimeout(()=>b.textContent='Kopiera offerttext',2000);
+  });
+}
+</script>
+</body>
+</html>
